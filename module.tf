@@ -47,6 +47,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     write_accelerator_enabled = try(var.linux_VM.write_accelerator_enabled, false)
   }
 
+  # Admin ssh key is NOT mutually exclusive with admin password. It is required if disable_password_authentication is set to true
   dynamic "admin_ssh_key" {
     for_each = try(var.linux_VM.admin_ssh_key, null) != null ? [1] : []
     content {
