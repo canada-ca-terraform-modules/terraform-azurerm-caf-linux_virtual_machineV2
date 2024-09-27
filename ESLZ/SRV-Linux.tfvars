@@ -83,5 +83,17 @@ linux_VMs = {
     #   type         = "SystemAssigned"
     #   identity_ids = []
     # }
+    
+    # Optional: Uncomment to configure boot diagnostic. DEfaults to using a managed storage account. 
+    # boot_diagnostic = {
+    #   use_managed_storage_account = true
+    #   # storage_account_resource_id = ""        # Only valid if use_managed_storage_account = false
+    # }
+
+    # Optional: Uncomment this block to set a key vault where the TF generated password will be. Default is KV in the project subscription.
+    # key_vault = {
+    #   name = ""
+    #   resource_group_name = "Keyvault"
+    # }
   }
 }

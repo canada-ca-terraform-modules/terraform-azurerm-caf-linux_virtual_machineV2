@@ -77,7 +77,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   dynamic "boot_diagnostics" {
     for_each = try(var.linux_VM.boot_diagnostic, false) != false ? [1] : []
     content {
-      storage_account_uri = module.boot_diagnostic_storage[0].storage-account-object.primary_blob_endpoint
+      storage_account_uri = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? null : (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? module.boot_diagnostic_storage[0].storage-account-object.primary_blob_endpoint : var.linux_VM.boot_diagnostic.storage_account_resource_id)
     }
   }
 

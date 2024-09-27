@@ -1,7 +1,7 @@
 # A storage account is needed to store the boot diagnostic logs
 module "boot_diagnostic_storage" {
   source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-storage_accountV2.git?ref=v1.0.3"
-  count = try(var.linux_VM.boot_diagnostic, false) ? 1 : 0
+  count = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? 0 : (try(var.linux_VM.boot_diagnostic, null) != null ? (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? 1 : 0) : 0)
   userDefinedString    = "${var.userDefinedString}-logs"
   location             = var.location
   env                  = var.env
@@ -25,7 +25,7 @@ module "boot_diagnostic_storage" {
 
 # The VM needs the Storage Blob Data Contributor to be able to access the SA to dump its logs
 resource "azurerm_role_assignment" "vm_contributor" {
-  count = try(var.linux_VM.boot_diagnostic, false) ? 1 : 0
+  count = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? 0 : (try(var.linux_VM.boot_diagnostic, null) != null ? (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? 1 : 0) : 0)
   scope = module.boot_diagnostic_storage[0].id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id = azurerm_linux_virtual_machine.vm.identity[0].principal_id
