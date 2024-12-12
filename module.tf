@@ -143,7 +143,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   tags = merge(var.tags, try(var.linux_VM.tags, {}), [try(var.linux_VM.computer_name, null) != null ? { "OsHostname" = var.linux_VM.computer_name } : null]...)
 
   lifecycle {
-    ignore_changes = [admin_username, admin_password, identity, os_disk ]
+    ignore_changes = [admin_username, admin_password, identity, os_disk, custom_data ]
   }
 }
 
