@@ -7,6 +7,7 @@ linux_VMs = {
     # password_overwrite = false                                       # Optional: Set this to true if you absolutely want to set the admin password above
     vm_size              = "Standard_D2s_v5"
     disable_password_authentication = true
+    custom_data                     = "install-ca-certs"
 
     backup_policy = "daily1"                                                                                     # Optional: Set this value to configure backup policy on the VM. Can be either userDefinedString portion of the policy name or ID. Defaults to daily1 
     # disable_backup           = false                                                                             # Optional: Set this value to true if you want to disable backups on this VM    
