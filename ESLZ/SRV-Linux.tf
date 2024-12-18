@@ -5,7 +5,7 @@ variable "linux_VMs" {
 }
 
 module "linux_VMs" {
-  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.0.2"
+  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.0.3"
   for_each = var.linux_VMs
 
   location= var.location
@@ -17,5 +17,5 @@ module "linux_VMs" {
   resource_groups = local.resource_groups_all
   subnets = local.subnets
   user_data = try(each.value.user_data, false) != false ? base64encode(file("${path.cwd}/${each.value.user_data}")) : null
-
+  custom_data = try(each.value.custom_data, false) != false ? each.value.custom_data == "install-ca-certs" ? each.value.custom_data : base64encode(file("${path.cwd}/${each.value.custom_data}")) : null
 }

@@ -58,3 +58,9 @@ variable "user_data" {
   type = any
   default = null
 }
+
+variable "custom_data" {
+  description = "Base64 encoded file representing custom data script for the VM"
+  type = any
+  default = null
+}

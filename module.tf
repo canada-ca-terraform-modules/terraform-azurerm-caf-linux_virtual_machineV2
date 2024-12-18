@@ -13,6 +13,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   bypass_platform_safety_checks_on_user_schedule_enabled = try(var.linux_VM.bypass_platform_safety_checks_on_user_schedule_enabled, false)
   capacity_reservation_group_id                          = try(var.linux_VM.capacity_reservation_group_id, null)
   computer_name                                          = try(var.linux_VM.computer_name, local.vm-name)
+  custom_data                                            = var.custom_data == "install-ca-certs" ? data.http.custom_data[0].response_body_base64 : var.custom_data
   user_data                                              = var.user_data
   dedicated_host_id                                      = try(var.linux_VM.dedicated_host_id, null)
   disable_password_authentication                        = try(var.linux_VM.disable_password_authentication, true)
@@ -142,7 +143,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   tags = merge(var.tags, try(var.linux_VM.tags, {}), [try(var.linux_VM.computer_name, null) != null ? { "OsHostname" = var.linux_VM.computer_name } : null]...)
 
   lifecycle {
-    ignore_changes = [admin_username, admin_password, identity, os_disk ]
+    ignore_changes = [admin_username, admin_password, identity, os_disk, custom_data ]
   }
 }
 
