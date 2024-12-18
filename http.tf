@@ -1,5 +1,5 @@
 locals {
-  custom_data_url = strcontains(var.env, "G3") ? "https://g3scexample01ba8b7d81.blob.core.windows.net/testest/testtest.ps1" : "https://gcpcenteslzpublicblob4df.blob.core.windows.net/publicresources/linux-ubuntu-customdata-default.sh"
+  custom_data_url = strcontains(var.env, "G3") ? "https://g3pceslzresentdfa0353e.blob.core.windows.net/publicresources/linux-ubuntu-customdata-default.sh" : "https://gcpcenteslzpublicblob4df.blob.core.windows.net/publicresources/linux-ubuntu-customdata-default.sh"
 }
 
 data "http" "custom_data" {
