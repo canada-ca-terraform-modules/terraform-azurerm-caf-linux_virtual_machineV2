@@ -25,10 +25,10 @@ data "azurerm_backup_policy_vm" "backup_policy" {
 
 resource "azurerm_backup_protected_vm" "backup_vm" {
   count               = try(var.linux_VM.disable_backup, false) == false ? 1 : 0
-  resource_group_name = try(var.linux_VM.jump_server, false) == true ? var.resource_group["Backups"].name : data.azurerm_recovery_services_vault.rsv.resource_group_name
+  resource_group_name = try(var.linux_VM.jump_server, false) == true ? var.resource_groups["Backups"].name : data.azurerm_recovery_services_vault.rsv[0].resource_group_name
   recovery_vault_name = try(var.linux_VM.jump_server, false) == true ? local.rsv-name : data.azurerm_recovery_services_vault.rsv[0].name
   source_vm_id        = azurerm_linux_virtual_machine.vm.id
-  backup_policy_id    = try(var.linux_VM.jump_server, false) == true ? var.linux_VM.backup_policy : data.azurerm_backup_policy_vm.backup_policy.id
+  backup_policy_id    = try(var.linux_VM.jump_server, false) == true ? var.linux_VM.backup_policy : data.azurerm_backup_policy_vm.backup_policy[0].id
 
   exclude_disk_luns = try(var.linux_VM.backup.exclude_disk_luns, null)
   include_disk_luns = try(var.linux_VM.backup.include_disk_luns, null)
