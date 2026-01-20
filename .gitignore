@@ -1,7 +1,0 @@
-# Terraform files
-.terraform/
-.terraform.lock.hcl
-terraform
-terraform_*.zip
-*.tfstate
-*.tfstate.*
