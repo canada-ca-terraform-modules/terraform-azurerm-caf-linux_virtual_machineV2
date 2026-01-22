@@ -31,7 +31,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   priority                                               = try(var.linux_VM.priority, "Regular")
   provision_vm_agent                                     = try(var.linux_VM.provision_vm_agent, true)
   proximity_placement_group_id                           = try(var.linux_VM.proximity_placement_group_id, null)
-  reboot_setting                                         = try(var.linux_VM.reboot_setting, "Never")
+  reboot_setting                                         = try(var.linux_VM.reboot_setting, try(var.linux_VM.patch_mode, "AutomaticByPlatform") == "ImageDefault" ? null : "Never")
   secure_boot_enabled                                    = try(var.linux_VM.secure_boot_enabled, false)
   source_image_id                                        = try(var.linux_VM.source_image_id, null)
   virtual_machine_scale_set_id                           = try(var.linux_VM.virtual_machine_scale_set_id, null)
