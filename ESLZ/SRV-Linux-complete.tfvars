@@ -6,14 +6,14 @@ linux_VMs = {
     admin_username = "azureadmin"
     # admin_password          = "Canada123!"                          # Optional: Only set the password if a generated password cannot be created. See README for details
     # password_overwrite = false                                       # Optional: Set this to true if you absolutely want to set the admin password above
-    vm_size              = "Standard_D2s_v5"
+    vm_size                         = "Standard_D2s_v5"
     disable_password_authentication = true
     custom_data                     = "install-ca-certs"
 
     # backup_policy = "daily1"                                                                                     # Optional: Set this value to configure backup policy on the VM. Can be either userDefinedString portion of the policy name or ID. Defaults to daily1 
     # disable_backup           = true                                                                             # Optional: Set this value to true if you want to disable backups on this VM    
-    patch_assessment_mode    = "AutomaticByPlatform" # force settings to AutomaticByPlatform for UMC OS patching 
-    patch_mode               = "AutomaticByPlatform" # force settings to AutomaticByPlatform for UMC OS patching 
+    patch_assessment_mode = "AutomaticByPlatform" # force settings to AutomaticByPlatform for UMC OS patching 
+    patch_mode            = "AutomaticByPlatform" # force settings to AutomaticByPlatform for UMC OS patching 
 
     # computer_name                                          = "Example"                                           # Optional: Set this if you need the guest OS Hostname to be different than the Azure resource name
     # user_data                                              = "post_install_scripts/ubuntu/post_install.sh"       # Optional: Set this value with the relative path to the file from your CWD.
@@ -30,7 +30,6 @@ linux_VMs = {
     # encryption_at_host_enabled                             = ""
     # eviction_policy                                        = ""
     # extensions_time_budget                                 = "PT1H30M"
-    # hotpatching_enabled                                    = false
     # license_type                                           = ""
     # max_bid_price                                          = -1
     # platform_fault_domain                                  = ""
@@ -42,7 +41,6 @@ linux_VMs = {
     # source_image_id                                        = ""
     # timezone                                               = "UTC-11"
     # virtual_machine_scale_set_id                           = ""
-    # vm_agent_platform_updates_enabled                      = false
     # vtpm_enabled                                           = ""
     # zone                                                   = ""
 
@@ -58,6 +56,7 @@ linux_VMs = {
         # ip_forwarding_enabled          = false
         # accelerated_networking_enabled = false
         # internal_dns_name_label        = ""
+        # public_ip_address_id           = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Network/publicIPAddresses/xxx"   # Optional: assign a Public IP to this NIC
       }
     }
 
@@ -76,11 +75,21 @@ linux_VMs = {
 
     # Optional: Uncomment if you need to configure os_disk with different defaults than below. Only supports one os_disk
     os_disk = {
-      caching = "ReadWrite"
-      storage_account_type = "StandardSSD_LRS"
-      disk_size_gb = 128
+      caching                   = "ReadWrite"
+      storage_account_type      = "StandardSSD_LRS"
+      disk_size_gb              = 128
       write_accelerator_enabled = false
+      # disk_encryption_set_id                  = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/diskEncryptionSets/xxx"
+      # secure_vm_disk_encryption_set_id        = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/diskEncryptionSets/xxx"  # For confidential VMs
+      # security_encryption_type                = "DiskWithVMGuestState"  # For confidential VMs (requires vtpm_enabled = true)
+      # diff_disk_settings = {
+      #   option    = "Local"
+      #   placement = "CacheDisk"        # Can be CacheDisk, ResourceDisk, or NvmeDisk (for v6 VMs)
+      # }
     }
+
+    # Optional: Use an existing managed disk as OS disk instead of creating a new one
+    # os_managed_disk_id = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/disks/xxx"
 
     # Optional: Uncomment and configure data disks for the VM. Can create more than one data disks.
     # data_disks = {
@@ -123,13 +132,16 @@ linux_VMs = {
     #   name = ""
     #   resource_group_name = "Keyvault"
     # }
-    
 
-    # Optional: Uncomment this if you want to set additional capabilities other than the default below
+
+    # Optional: If you want to set additional capabilities like UltraSSD support or hibernation
     # additional_capabilities = {
     #   ultra_ssd_enabled   = false
     #   hibernation_enabled = false
     # }
+
+    # Optional: Enable vTPM for Confidential VMs (requires compatible VM size)
+    # vtpm_enabled = false
 
     # Optional: Uncomment this if you want to set gallery_application
     # gallery_application = {
