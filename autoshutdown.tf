@@ -14,4 +14,6 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "autoShutdown" {
     email           = try(var.linux_VM.auto_shutdown_config.notification_settings.email, null)
     time_in_minutes = try(var.linux_VM.auto_shutdown_config.notification_settings.time_in_minutes, 30)
   }
+
+  tags = merge(var.tags, try(var.linux_VM.tags, {}), [try(var.linux_VM.computer_name, null) != null ? { "OsHostname" = var.linux_VM.computer_name } : null]...)
 } 
