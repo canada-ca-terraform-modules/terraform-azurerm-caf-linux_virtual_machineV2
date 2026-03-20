@@ -35,17 +35,28 @@ resource "azurerm_linux_virtual_machine" "vm" {
   secure_boot_enabled                                    = try(var.linux_VM.secure_boot_enabled, false)
   source_image_id                                        = try(var.linux_VM.source_image_id, null)
   virtual_machine_scale_set_id                           = try(var.linux_VM.virtual_machine_scale_set_id, null)
-  vm_agent_platform_updates_enabled                      = try(var.linux_VM.vm_agent_platform_updates_enabled, false)
+  os_managed_disk_id                                     = try(var.linux_VM.os_managed_disk_id, null)
   vtpm_enabled                                           = try(var.linux_VM.vtpm_enabled, null)
   zone                                                   = try(var.linux_VM.zone, null)
 
   # Only one OS disk is accepted. Default size is 128Gb. 
   os_disk {
-    name                      = "${local.vm-name}-osdisk1"
-    caching                   = try(var.linux_VM.os_disk.caching, "ReadWrite")
-    storage_account_type      = try(var.linux_VM.os_disk.storage_account_type, "StandardSSD_LRS")
-    disk_size_gb              = try(var.linux_VM.os_disk.disk_size_gb, null)
-    write_accelerator_enabled = try(var.linux_VM.write_accelerator_enabled, false)
+    name                             = "${local.vm-name}-osdisk1"
+    caching                          = try(var.linux_VM.os_disk.caching, "ReadWrite")
+    storage_account_type             = try(var.linux_VM.os_disk.storage_account_type, "StandardSSD_LRS")
+    disk_size_gb                     = try(var.linux_VM.os_disk.disk_size_gb, null)
+    write_accelerator_enabled        = try(var.linux_VM.os_disk.write_accelerator_enabled, false)
+    disk_encryption_set_id           = try(var.linux_VM.os_disk.disk_encryption_set_id, null)
+    secure_vm_disk_encryption_set_id = try(var.linux_VM.os_disk.secure_vm_disk_encryption_set_id, null)
+    security_encryption_type         = try(var.linux_VM.os_disk.security_encryption_type, null)
+
+    dynamic "diff_disk_settings" {
+      for_each = try(var.linux_VM.os_disk.diff_disk_settings, null) != null ? [1] : []
+      content {
+        option    = var.linux_VM.os_disk.diff_disk_settings.option
+        placement = try(var.linux_VM.os_disk.diff_disk_settings.placement, "CacheDisk")
+      }
+    }
   }
 
   # Admin ssh key is NOT mutually exclusive with admin password. It is required if disable_password_authentication is set to true
@@ -53,7 +64,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     for_each = try(var.linux_VM.admin_ssh_key, null) != null ? [1] : []
     content {
       public_key = var.linux_VM.admin_ssh_key.public_key
-      username = var.linux_VM.admin_ssh_key.username
+      username   = var.linux_VM.admin_ssh_key.username
     }
   }
 
@@ -72,6 +83,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     for_each = try(var.linux_VM.additional_capabilities, null) != null ? [1] : []
     content {
       ultra_ssd_enabled   = try(var.linux_VM.additional_capabilities.ultra_ssd_enabled, false)
+      hibernation_enabled = try(var.linux_VM.additional_capabilities.hibernation_enabled, false)
     }
   }
 
@@ -109,7 +121,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
       dynamic "certificate" {
         for_each = var.linux_VM.secret.certificate
         content {
-          url   = each.value.certificate.url
+          url = each.value.certificate.url
         }
       }
       key_vault_id = var.linux_VM.certificate.key_vault_id
@@ -143,7 +155,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   tags = merge(var.tags, try(var.linux_VM.tags, {}), [try(var.linux_VM.computer_name, null) != null ? { "OsHostname" = var.linux_VM.computer_name } : null]...)
 
   lifecycle {
-    ignore_changes = [admin_username, admin_password, identity, os_disk, custom_data, gallery_application ]
+    ignore_changes = [admin_username, admin_password, identity, os_disk, custom_data, gallery_application]
   }
 }
 
@@ -280,8 +292,8 @@ resource "azurerm_network_interface_backend_address_pool_association" "LB" {
 }
 
 resource "azurerm_network_interface_application_security_group_association" "asg" {
-  count = try(var.linux_VM.asg, null) != null ? 1 : 0
-  network_interface_id = azurerm_network_interface.vm-nic[keys(local.nic_indices)[0]].id
+  count                         = try(var.linux_VM.asg, null) != null ? 1 : 0
+  network_interface_id          = azurerm_network_interface.vm-nic[keys(local.nic_indices)[0]].id
   application_security_group_id = var.linux_VM.asg.application_security_group_id
 
 }

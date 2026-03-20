@@ -1,7 +1,7 @@
 # A storage account is needed to store the boot diagnostic logs
 module "boot_diagnostic_storage" {
-  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-storage_accountV2.git?ref=v1.0.4"
-  count = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? 0 : (try(var.linux_VM.boot_diagnostic, null) != null ? (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? 1 : 0) : 0)
+  source               = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-storage_accountV2.git?ref=v1.0.5"
+  count                = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? 0 : (try(var.linux_VM.boot_diagnostic, null) != null ? (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? 1 : 0) : 0)
   userDefinedString    = "${var.userDefinedString}-logs"
   location             = var.location
   env                  = var.env
@@ -10,13 +10,13 @@ module "boot_diagnostic_storage" {
   private_dns_zone_ids = null
   tags                 = var.tags
   storage_account = {
-    resource_group            = var.linux_VM.resource_group
-    account_tier              = "Standard"
-    account_replication_type  = "GRS"
+    resource_group           = var.linux_VM.resource_group
+    account_tier             = "Standard"
+    account_replication_type = "GRS"
     private_endpoint = {
       "${var.userDefinedString}-logs" = {
-        resource_group = var.linux_VM.resource_group
-        subnet = var.linux_VM.nic[keys(local.nic_indices)[0]].subnet
+        resource_group    = var.linux_VM.resource_group
+        subnet            = var.linux_VM.nic[keys(local.nic_indices)[0]].subnet
         subresource_names = ["blob"]
       }
     }
@@ -25,8 +25,8 @@ module "boot_diagnostic_storage" {
 
 # The VM needs the Storage Blob Data Contributor to be able to access the SA to dump its logs
 resource "azurerm_role_assignment" "vm_contributor" {
-  count = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? 0 : (try(var.linux_VM.boot_diagnostic, null) != null ? (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? 1 : 0) : 0)
-  scope = module.boot_diagnostic_storage[0].id
+  count                = try(var.linux_VM.boot_diagnostic.use_managed_storage_account, true) ? 0 : (try(var.linux_VM.boot_diagnostic, null) != null ? (try(var.linux_VM.boot_diagnostic.storage_account_resource_id, "") == "" ? 1 : 0) : 0)
+  scope                = module.boot_diagnostic_storage[0].id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  principal_id         = azurerm_linux_virtual_machine.vm.identity[0].principal_id
 }

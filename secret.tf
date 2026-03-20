@@ -12,8 +12,8 @@ locals {
 
 # Need to get info about the subscription key vault. If password_overwrite is true, then don't bother since we  won't use it
 data "azurerm_key_vault" "key_vault" {
-  count = try(var.linux_VM.admin_password, "") != "" || try(var.linux_VM.disable_password_authentication, false) ? 0 : 1
-  name = try(var.linux_VM.key_vault.name, local.kv_name)
+  count               = try(var.linux_VM.admin_password, "") != "" || try(var.linux_VM.disable_password_authentication, false) ? 0 : 1
+  name                = try(var.linux_VM.key_vault.name, local.kv_name)
   resource_group_name = strcontains(local.kv_resource_group_name, "/resourceGroups/") ? regex("[^\\/]+$", local.kv_resource_group_name) : var.resource_groups[local.kv_resource_group_name].name
 }
 
