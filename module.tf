@@ -3,20 +3,20 @@ resource "azurerm_linux_virtual_machine" "vm" {
   location              = var.location
   resource_group_name   = local.resource_group_name
   size                  = var.linux_VM.vm_size
-  admin_username        = var.linux_VM.admin_username
-  admin_password        = local.vm-admin-password
+  admin_username        = local.using_managed_os_disk ? null : var.linux_VM.admin_username
+  admin_password        = local.using_managed_os_disk ? null : local.vm-admin-password
   network_interface_ids = local.nics
 
   # Optional parameters
   allow_extension_operations                             = try(var.linux_VM.allow_extension_operations, true)
   availability_set_id                                    = try(var.linux_VM.availability_set_id, null)
-  bypass_platform_safety_checks_on_user_schedule_enabled = try(var.linux_VM.bypass_platform_safety_checks_on_user_schedule_enabled, false)
+  bypass_platform_safety_checks_on_user_schedule_enabled = local.using_managed_os_disk ? null : try(var.linux_VM.bypass_platform_safety_checks_on_user_schedule_enabled, false)
   capacity_reservation_group_id                          = try(var.linux_VM.capacity_reservation_group_id, null)
-  computer_name                                          = try(var.linux_VM.computer_name, local.vm-name)
+  computer_name                                          = local.using_managed_os_disk ? null : try(var.linux_VM.computer_name, local.vm-name)
   custom_data                                            = var.custom_data == "install-ca-certs" ? data.http.custom_data[0].response_body_base64 : var.custom_data
   user_data                                              = var.user_data
   dedicated_host_id                                      = try(var.linux_VM.dedicated_host_id, null)
-  disable_password_authentication                        = try(var.linux_VM.disable_password_authentication, true)
+  disable_password_authentication                        = local.using_managed_os_disk ? null : try(var.linux_VM.disable_password_authentication, true)
   dedicated_host_group_id                                = try(var.linux_VM.dedicated_host_group_id, null)
   edge_zone                                              = try(var.linux_VM.edge_zone, null)
   disk_controller_type                                   = try(var.linux_VM.disk_controller_type, null)
@@ -25,43 +25,46 @@ resource "azurerm_linux_virtual_machine" "vm" {
   extensions_time_budget                                 = try(var.linux_VM.extensions_time_budget, "PT1H30M")
   license_type                                           = try(var.linux_VM.license_type, null)
   max_bid_price                                          = try(var.linux_VM.max_bid_price, -1)
-  patch_assessment_mode                                  = try(var.linux_VM.patch_assessment_mode, "AutomaticByPlatform")
-  patch_mode                                             = try(var.linux_VM.patch_mode, "AutomaticByPlatform")
+  patch_assessment_mode                                  = local.using_managed_os_disk ? null : try(var.linux_VM.patch_assessment_mode, "AutomaticByPlatform")
+  patch_mode                                             = local.using_managed_os_disk ? null : try(var.linux_VM.patch_mode, "AutomaticByPlatform")
   platform_fault_domain                                  = try(var.linux_VM.platform_fault_domain, null)
   priority                                               = try(var.linux_VM.priority, "Regular")
-  provision_vm_agent                                     = try(var.linux_VM.provision_vm_agent, true)
+  provision_vm_agent                                     = local.using_managed_os_disk ? null : try(var.linux_VM.provision_vm_agent, true)
   proximity_placement_group_id                           = try(var.linux_VM.proximity_placement_group_id, null)
-  reboot_setting                                         = try(var.linux_VM.reboot_setting, try(var.linux_VM.patch_mode, "AutomaticByPlatform") == "ImageDefault" ? null : "Never")
+  reboot_setting                                         = local.using_managed_os_disk ? null : try(var.linux_VM.reboot_setting, try(var.linux_VM.patch_mode, "AutomaticByPlatform") == "ImageDefault" ? null : "Never")
   secure_boot_enabled                                    = try(var.linux_VM.secure_boot_enabled, false)
-  source_image_id                                        = try(var.linux_VM.source_image_id, null)
+  source_image_id                                        = local.using_managed_os_disk ? null : try(var.linux_VM.source_image_id, null)
   virtual_machine_scale_set_id                           = try(var.linux_VM.virtual_machine_scale_set_id, null)
   os_managed_disk_id                                     = try(var.linux_VM.os_managed_disk_id, null)
   vtpm_enabled                                           = try(var.linux_VM.vtpm_enabled, null)
   zone                                                   = try(var.linux_VM.zone, null)
 
-  # Only one OS disk is accepted. Default size is 128Gb. 
-  os_disk {
-    name                             = "${local.vm-name}-osdisk1"
-    caching                          = try(var.linux_VM.os_disk.caching, "ReadWrite")
-    storage_account_type             = try(var.linux_VM.os_disk.storage_account_type, "StandardSSD_LRS")
-    disk_size_gb                     = try(var.linux_VM.os_disk.disk_size_gb, null)
-    write_accelerator_enabled        = try(var.linux_VM.os_disk.write_accelerator_enabled, false)
-    disk_encryption_set_id           = try(var.linux_VM.os_disk.disk_encryption_set_id, null)
-    secure_vm_disk_encryption_set_id = try(var.linux_VM.os_disk.secure_vm_disk_encryption_set_id, null)
-    security_encryption_type         = try(var.linux_VM.os_disk.security_encryption_type, null)
+  # Only one OS disk is accepted. Default size is 128Gb.
+  dynamic "os_disk" {
+    for_each = [1]
+    content {
+      name                             = local.using_managed_os_disk ? null : "${local.vm-name}-osdisk1"
+      caching                          = try(var.linux_VM.os_disk.caching, "ReadWrite")
+      storage_account_type             = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.storage_account_type, "StandardSSD_LRS")
+      disk_size_gb                     = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.disk_size_gb, null)
+      write_accelerator_enabled        = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.write_accelerator_enabled, false)
+      disk_encryption_set_id           = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.disk_encryption_set_id, null)
+      secure_vm_disk_encryption_set_id = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.secure_vm_disk_encryption_set_id, null)
+      security_encryption_type         = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.security_encryption_type, null)
 
-    dynamic "diff_disk_settings" {
-      for_each = try(var.linux_VM.os_disk.diff_disk_settings, null) != null ? [1] : []
-      content {
-        option    = var.linux_VM.os_disk.diff_disk_settings.option
-        placement = try(var.linux_VM.os_disk.diff_disk_settings.placement, "CacheDisk")
+      dynamic "diff_disk_settings" {
+        for_each = local.using_managed_os_disk ? [] : (try(var.linux_VM.os_disk.diff_disk_settings, null) != null ? [1] : [])
+        content {
+          option    = var.linux_VM.os_disk.diff_disk_settings.option
+          placement = try(var.linux_VM.os_disk.diff_disk_settings.placement, "CacheDisk")
+        }
       }
     }
   }
 
   # Admin ssh key is NOT mutually exclusive with admin password. It is required if disable_password_authentication is set to true
   dynamic "admin_ssh_key" {
-    for_each = try(var.linux_VM.admin_ssh_key, null) != null ? [1] : []
+    for_each = !local.using_managed_os_disk && try(var.linux_VM.admin_ssh_key, null) != null ? [1] : []
     content {
       public_key = var.linux_VM.admin_ssh_key.public_key
       username   = var.linux_VM.admin_ssh_key.username
@@ -70,7 +73,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   # A source image ID might be given instead
   dynamic "source_image_reference" {
-    for_each = try(var.linux_VM.source_image_id, null) == null ? [1] : []
+    for_each = !local.using_managed_os_disk && try(var.linux_VM.source_image_id, null) == null ? [1] : []
     content {
       publisher = var.linux_VM.storage_image_reference.publisher
       offer     = var.linux_VM.storage_image_reference.offer
@@ -97,12 +100,12 @@ resource "azurerm_linux_virtual_machine" "vm" {
   dynamic "gallery_application" {
     for_each = try(var.linux_VM.gallery_application, null) != null ? [1] : []
     content {
-      version_id                                  = each.value.gallery_application.version_id
-      automatic_upgrade_enabled                   = try(each.value.gallery_application.automatic_upgrade_enabled, false)
-      configuration_blob_uri                      = try(each.value.gallery_application.configuration_blob_uri, null)
-      order                                       = try(each.value.gallery_application.order, 0)
-      tag                                         = try(each.value.gallery_application.tag, null)
-      treat_failure_as_deployment_failure_enabled = try(each.value.gallery_application.treat_failure_as_deployment_failure_enabled, false)
+      version_id                                  = var.linux_VM.gallery_application.version_id
+      automatic_upgrade_enabled                   = try(var.linux_VM.gallery_application.automatic_upgrade_enabled, false)
+      configuration_blob_uri                      = try(var.linux_VM.gallery_application.configuration_blob_uri, null)
+      order                                       = try(var.linux_VM.gallery_application.order, 0)
+      tag                                         = try(var.linux_VM.gallery_application.tag, null)
+      treat_failure_as_deployment_failure_enabled = try(var.linux_VM.gallery_application.treat_failure_as_deployment_failure_enabled, false)
     }
   }
 
@@ -121,10 +124,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
       dynamic "certificate" {
         for_each = var.linux_VM.secret.certificate
         content {
-          url = each.value.certificate.url
+          url = certificate.value.url
         }
       }
-      key_vault_id = var.linux_VM.certificate.key_vault_id
+      key_vault_id = var.linux_VM.secret.key_vault_id
     }
   }
 
@@ -140,7 +143,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   dynamic "os_image_notification" {
     for_each = try(var.linux_VM.os_image_notification, null) != null ? [1] : []
     content {
-      timeout = try(var.linux_VM.os_image_notification, "PT15M")
+      timeout = try(var.linux_VM.os_image_notification.timeout, "PT15M")
     }
   }
 
@@ -180,7 +183,7 @@ resource "azurerm_network_interface" "vm-nic" {
     private_ip_address_allocation = try(each.value.private_ip_address_allocation, "Dynamic")
     private_ip_address            = try(each.value.private_ip_address_allocation, "Dynamic") == "Dynamic" ? null : each.value.private_ip_address
     subnet_id                     = strcontains(each.value.subnet, "/resourceGroups/") ? each.value.subnet : var.subnets[each.value.subnet].id
-    private_ip_address_version    = try(each.value.nic.private_ip_address_version, "IPv4")
+    private_ip_address_version    = try(each.value.private_ip_address_version, "IPv4")
     primary                       = local.nic_indices[each.key] == 0 ? true : false
 
   }

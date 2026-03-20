@@ -15,7 +15,7 @@ In your ESLZ or deployment configuration, reference this module with appropriate
 
 ```hcl
 module "linux_VMs" {
-  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.0.6"
+  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.1.0"
   
   for_each = var.linux_VMs
 

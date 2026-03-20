@@ -15,4 +15,7 @@ locals {
 
   # This list is used to organize the nics given to the module, used to determine which NIC will be the primary one. (At index 0)
   nic_indices = { for k, v in var.linux_VM.nic : k => index(keys(var.linux_VM.nic), k) }
+
+  # Existing OS managed disk attachment mode has different provider constraints.
+  using_managed_os_disk = try(var.linux_VM.os_managed_disk_id, null) != null
 }

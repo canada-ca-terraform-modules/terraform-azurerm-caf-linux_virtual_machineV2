@@ -1,11 +1,21 @@
-# Minimal test to validate module configuration with new azurerm 4.50.0 features
-# This test verifies that the module correctly accepts and processes the new parameters
+# VM Test Cases
 
-terraform {
-  # Note: Tests for this module are best done with terraform validate since the module
-  # has dependencies on many external resources (recovery services vaults, key vaults, etc.)
-  # For full integration testing, deploy via ESLZ with mock or actual infrastructure.
-}
+Native Terraform tests for this module are in this folder as `.tftest.hcl` files.
 
-# This file can be expanded with specific test cases when testing against
-# mock providers or in a full integration environment.
+## Included test
+
+- `simple_vm.tftest.hcl`: minimal VM plan simulation with test-only input objects.
+
+## Run tests
+
+From the repository root:
+
+```bash
+terraform init
+terraform test
+```
+
+## Notes
+
+- The test is module-level (input variable is `linux_VM`, singular).
+- It uses `jump_server = true` and `disable_password_authentication = true` to reduce external lookup dependencies.

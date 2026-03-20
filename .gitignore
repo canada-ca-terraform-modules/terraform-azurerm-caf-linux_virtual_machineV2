@@ -1,0 +1,33 @@
+# Terraform working directories and caches
+.terraform/
+.terraform.d/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Terraform plan output files
+*.tfplan
+*.plan
+
+# Variable override files that often contain environment-specific or sensitive values
+*.tfvars.json
+!ESLZ/*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI and crash logs
+crash.log
+crash.*.log
+
+# Local environment files
+.env
+.env.*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

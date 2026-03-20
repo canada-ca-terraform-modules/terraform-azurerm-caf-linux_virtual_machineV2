@@ -52,7 +52,23 @@ linux_VMs = {
       storage_account_type      = "StandardSSD_LRS"
       disk_size_gb              = 128
       write_accelerator_enabled = false
+      # disk_encryption_set_id           = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/diskEncryptionSets/xxx"
+      # secure_vm_disk_encryption_set_id = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/diskEncryptionSets/xxx"  # For confidential VMs
+      # security_encryption_type         = "DiskWithVMGuestState"  # For confidential VMs (requires vtpm_enabled = true)
+      # diff_disk_settings = {
+      #   option    = "Local"
+      #   placement = "CacheDisk"  # CacheDisk, ResourceDisk, or NvmeDisk (v6 VMs)
+      # }
     }
+
+    # Optional: Use an existing managed disk as OS disk instead of creating one.
+    # os_managed_disk_id = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/disks/xxx"
+
+    # Optional: Additional capabilities block for features such as hibernation.
+    # additional_capabilities = {
+    #   ultra_ssd_enabled   = false
+    #   hibernation_enabled = false
+    # }
 
     # Optional: Uncomment and configure data disks for the VM. Can create more than one data disks.
     # data_disks = {
