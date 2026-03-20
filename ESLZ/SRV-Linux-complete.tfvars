@@ -56,6 +56,8 @@ linux_VMs = {
         # ip_forwarding_enabled          = false
         # accelerated_networking_enabled = false
         # internal_dns_name_label        = ""
+        # public_ip_address_id           = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Network/publicIPAddresses/xxx"   # Optional: assign a Public IP to this NIC
+        # primary                        = true   # Optional: override which NIC is primary (defaults to first NIC in map)
       }
     }
 

@@ -184,7 +184,8 @@ resource "azurerm_network_interface" "vm-nic" {
     private_ip_address            = try(each.value.private_ip_address_allocation, "Dynamic") == "Dynamic" ? null : each.value.private_ip_address
     subnet_id                     = strcontains(each.value.subnet, "/resourceGroups/") ? each.value.subnet : var.subnets[each.value.subnet].id
     private_ip_address_version    = try(each.value.private_ip_address_version, "IPv4")
-    primary                       = local.nic_indices[each.key] == 0 ? true : false
+    public_ip_address_id          = try(each.value.public_ip_address_id, null)
+    primary                       = try(each.value.primary, local.nic_indices[each.key] == 0)
 
   }
 }
