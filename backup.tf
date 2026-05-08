@@ -3,8 +3,6 @@ locals {
   maxLenght                          = 50
   env_4_bk                           = substr(var.env, 0, 4)
   regex                              = "/[^0-9A-Za-z-]/"
-  userDefinedString_replaced         = replace(var.userDefinedString, "_", "-")
-  userDefinedString_replaced_shorten = substr(local.userDefinedString_replaced, 0, local.maxLenght - length(local.postfix) - length(local.env_4_bk) - 4)
   rsv-name                           = substr(replace("${local.env_4_bk}CNR-${var.group}-${var.project}${local.postfix}", local.regex, ""), 0, local.maxLenght)
 }
 

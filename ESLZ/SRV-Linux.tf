@@ -1,3 +1,7 @@
+terraform {
+  required_version = ">= 1.9.0"
+}
+
 variable "linux_VMs" {
   description = "Object containing all windows VM parameters"
   type        = any

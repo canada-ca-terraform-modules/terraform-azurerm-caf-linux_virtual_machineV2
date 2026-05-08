@@ -5,6 +5,7 @@
 # Terraform state files
 *.tfstate
 *.tfstate.*
+*.tfvars
 
 # Terraform plan output files
 *.tfplan

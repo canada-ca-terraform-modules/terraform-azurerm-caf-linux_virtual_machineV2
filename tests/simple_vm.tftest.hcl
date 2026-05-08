@@ -401,3 +401,110 @@ run "diff_disk_settings_argument" {
     error_message = "diff_disk_settings.option should be propagated"
   }
 }
+
+run "resource_name_overrides" {
+  command = plan
+
+  variables {
+    linux_VM = {
+      jump_server                     = true
+      resource_group                  = "Project"
+      admin_username                  = "azureadmin"
+      disable_password_authentication = true
+      vm_size                         = "Standard_D2s_v5"
+      disable_backup                  = true
+      vm_name                         = "custom-linux-vm-name"
+      nsg_name                        = "custom-linux-nsg"
+
+      admin_ssh_key = {
+        username   = "azureadmin"
+        public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1G9o2R8v5rcVaGCXuWCoc4XEcVcKECOZbwcTrVgetTN1vByvVj5W/T1ivu8xZOK2SuoWWA7Vl7s8qufAS37rPnbC+7oRqvR6Log7bf8LGlHRtOhEmrhfT9uOYC1poq9JSczdYU4GU5jieJghuaDFX92wNtepO8n6bcd1EfvMSNTcrbmG8+OrKc7iBGl0cBcEGaszoaD3i4VRxGuCJsatQrJorQgD01AZbESWFP+Ijb3rzcCP7TDlJ6PddDz8SrWpyRO6nW5JEVNtaPgqJTUgnM31qcGJVfA/WGF4+WqvzHFSVzwnC/Xxp4VhlNaM75uRslNFesnQi/g5RzlDgGnm/ test@example"
+      }
+
+      nic = {
+        nic1 = {
+          subnet                = "OZ"
+          name                  = "custom-linux-nic1"
+          ip_configuration_name = "custom-primary-ipconfig"
+        }
+      }
+
+      load_balancer_address_pools_ids = {
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/loadBalancers/lb1/backendAddressPools/pool1" = {}
+      }
+
+      use_nic_nsg = true
+      security_rules = {
+        test = {
+          name                         = "Allow-SSH"
+          priority                     = 100
+          direction                    = "Inbound"
+          access                       = "Allow"
+          protocol                     = "Tcp"
+          source_port_ranges           = ["*"]
+          destination_port_ranges      = ["22"]
+          source_address_prefixes      = ["*"]
+          destination_address_prefixes = ["*"]
+          description                  = "Allow SSH"
+        }
+      }
+
+      storage_image_reference = {
+        publisher = "canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts-gen2"
+        version   = "latest"
+      }
+
+      os_disk = {
+        name                 = "custom-linux-osdisk"
+        caching              = "ReadWrite"
+        storage_account_type = "StandardSSD_LRS"
+      }
+
+      data_disks = {
+        disk1 = {
+          name               = "custom-linux-datadisk-1"
+          disk_create_option = "Empty"
+          disk_size_gb       = 128
+          lun                = 0
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_virtual_machine.vm.name == "custom-linux-vm-name"
+    error_message = "VM name override should be used when provided"
+  }
+
+  assert {
+    condition     = azurerm_linux_virtual_machine.vm.os_disk[0].name == "custom-linux-osdisk"
+    error_message = "OS disk name override should be used when provided"
+  }
+
+  assert {
+    condition     = azurerm_network_interface.vm-nic["nic1"].name == "custom-linux-nic1"
+    error_message = "NIC name override should be used when provided"
+  }
+
+  assert {
+    condition     = azurerm_network_interface.vm-nic["nic1"].ip_configuration[0].name == "custom-primary-ipconfig"
+    error_message = "NIC IP configuration name override should be used when provided"
+  }
+
+  assert {
+    condition     = azurerm_managed_disk.data_disks["disk1"].name == "custom-linux-datadisk-1"
+    error_message = "Data disk name override should be used when provided"
+  }
+
+  assert {
+    condition     = azurerm_network_security_group.NSG[0].name == "custom-linux-nsg"
+    error_message = "NSG name override should be used when provided"
+  }
+
+  assert {
+    condition     = azurerm_network_interface_backend_address_pool_association.LB["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/loadBalancers/lb1/backendAddressPools/pool1"].ip_configuration_name == "custom-primary-ipconfig"
+    error_message = "LB association should use the first NIC ip_configuration_name override when provided"
+  }
+}
