@@ -1,5 +1,5 @@
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                  = local.vm-name
+  name                  = try(trimspace(var.linux_VM.vm_name) != "" ? trimspace(var.linux_VM.vm_name) : local.vm-name, local.vm-name)
   location              = var.location
   resource_group_name   = local.resource_group_name
   size                  = var.linux_VM.vm_size
@@ -43,7 +43,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   dynamic "os_disk" {
     for_each = [1]
     content {
-      name                             = local.using_managed_os_disk ? null : "${local.vm-name}-osdisk1"
+      name                             = local.using_managed_os_disk ? null : try(trimspace(var.linux_VM.os_disk.name) != "" ? trimspace(var.linux_VM.os_disk.name) : "${local.vm-name}-osdisk1", "${local.vm-name}-osdisk1")
       caching                          = try(var.linux_VM.os_disk.caching, "ReadWrite")
       storage_account_type             = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.storage_account_type, "StandardSSD_LRS")
       disk_size_gb                     = local.using_managed_os_disk ? null : try(var.linux_VM.os_disk.disk_size_gb, null)
@@ -165,7 +165,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 # More than one NIC can be configured
 resource "azurerm_network_interface" "vm-nic" {
   for_each            = var.linux_VM.nic
-  name                = "${local.vm-name}-nic${local.nic_indices[each.key] + 1}"
+  name                = try(trimspace(each.value.name) != "" ? trimspace(each.value.name) : "${local.vm-name}-nic${local.nic_indices[each.key] + 1}", "${local.vm-name}-nic${local.nic_indices[each.key] + 1}")
   location            = var.location
   resource_group_name = local.resource_group_name
 
@@ -179,7 +179,7 @@ resource "azurerm_network_interface" "vm-nic" {
 
   # The first NIC in the list will always be the primary
   ip_configuration {
-    name                          = "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}"
+    name                          = try(trimspace(each.value.ip_configuration_name) != "" ? trimspace(each.value.ip_configuration_name) : "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}", "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}")
     private_ip_address_allocation = try(each.value.private_ip_address_allocation, "Dynamic")
     private_ip_address            = try(each.value.private_ip_address_allocation, "Dynamic") == "Dynamic" ? null : each.value.private_ip_address
     subnet_id                     = strcontains(each.value.subnet, "/resourceGroups/") ? each.value.subnet : var.subnets[each.value.subnet].id
@@ -193,10 +193,10 @@ resource "azurerm_network_interface" "vm-nic" {
 resource "azurerm_managed_disk" "data_disks" {
   for_each = try(var.linux_VM.data_disks, {})
 
-  name                 = "${local.vm-name}-datadisk${each.value.lun + 1}"
+  name                 = try(trimspace(each.value.name) != "" ? trimspace(each.value.name) : "${local.vm-name}-datadisk${each.value.lun + 1}", "${local.vm-name}-datadisk${each.value.lun + 1}")
   resource_group_name  = local.resource_group_name
   location             = var.location
-  storage_account_type = try(each.value.os_managed_disk_type, "StandardSSD_LRS")
+  storage_account_type = try(each.value.storage_account_type, "StandardSSD_LRS")
   create_option        = try(each.value.disk_create_option, "Empty")
   disk_size_gb         = try(each.value.disk_size_gb, 256)
 
@@ -252,7 +252,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data_disks_attachment" 
 # NSG usually set on subnet level, adding it here for inevitable edge cases
 resource "azurerm_network_security_group" "NSG" {
   count               = try(var.linux_VM.use_nic_nsg, false) ? 1 : 0
-  name                = "${local.vm-name}-nsg"
+  name                = try(trimspace(var.linux_VM.nsg_name) != "" ? trimspace(var.linux_VM.nsg_name) : "${local.vm-name}-nsg", "${local.vm-name}-nsg")
   location            = var.location
   resource_group_name = local.resource_group_name
 
@@ -291,7 +291,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "LB" {
   for_each = try(var.linux_VM.load_balancer_address_pools_ids, {})
 
   network_interface_id    = azurerm_network_interface.vm-nic[keys(local.nic_indices)[0]].id
-  ip_configuration_name   = "${local.vm-name}-ipconfig1"
+  ip_configuration_name   = try(var.linux_VM.nic[keys(local.nic_indices)[0]].ip_configuration_name, "${local.vm-name}-ipconfig1")
   backend_address_pool_id = each.key
 }
 

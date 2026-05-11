@@ -20,6 +20,9 @@ jobs:
         with:
           terraform_version: "~>1.9"
 
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6.2.2
+
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
@@ -28,6 +31,12 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
+
+      - name: TFLint Init
+        run: tflint --init
+
+      - name: TFLint
+        run: tflint --recursive
 
       - name: Terraform Test
         run: terraform test
