@@ -1,9 +1,9 @@
 locals {
-  postfix                            = "-rsv"
-  maxLenght                          = 50
-  env_4_bk                           = substr(var.env, 0, 4)
-  regex                              = "/[^0-9A-Za-z-]/"
-  rsv-name                           = substr(replace("${local.env_4_bk}CNR-${var.group}-${var.project}${local.postfix}", local.regex, ""), 0, local.maxLenght)
+  postfix   = "-rsv"
+  maxLenght = 50
+  env_4_bk  = substr(var.env, 0, 4)
+  regex     = "/[^0-9A-Za-z-]/"
+  rsv-name  = substr(replace("${local.env_4_bk}CNR-${var.group}-${var.project}${local.postfix}", local.regex, ""), 0, local.maxLenght)
 }
 
 # Get the RSV from the target sub
