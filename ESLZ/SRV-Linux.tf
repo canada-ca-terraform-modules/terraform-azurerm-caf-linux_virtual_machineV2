@@ -17,6 +17,7 @@ module "linux_VMs" {
   group             = var.group
   project           = var.project
   userDefinedString = each.key
+  server_type        = each.value.serverType
   linux_VM          = each.value
   resource_groups   = local.resource_groups_all
   subnets           = local.subnets
