@@ -9,7 +9,7 @@ variable "linux_VMs" {
 }
 
 module "linux_VMs" {
-  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.1.1"
+  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.1.2"
   for_each = var.linux_VMs
 
   location          = var.location
@@ -17,6 +17,7 @@ module "linux_VMs" {
   group             = var.group
   project           = var.project
   userDefinedString = each.key
+  server_type       = each.value.serverType
   linux_VM          = each.value
   resource_groups   = local.resource_groups_all
   subnets           = local.subnets
