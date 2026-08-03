@@ -16,4 +16,4 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "autoShutdown" {
   }
 
   tags = merge(var.tags, try(var.linux_VM.tags, {}), [try(var.linux_VM.computer_name, null) != null ? { "OsHostname" = var.linux_VM.computer_name } : null]...)
-} 
+}

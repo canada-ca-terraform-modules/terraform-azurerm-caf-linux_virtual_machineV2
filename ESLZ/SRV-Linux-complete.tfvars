@@ -74,6 +74,9 @@ linux_VMs = {
         # accelerated_networking_enabled = false
         # internal_dns_name_label        = ""
         # public_ip_address_id           = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Network/publicIPAddresses/xxx"  # Optional: assign a Public IP to this NIC
+        # gateway_load_balancer_frontend_ip_configuration_id = ""  # Optional: attach to a Gateway SKU Load Balancer
+        # auxiliary_mode                 = "AcceleratedConnections"  # New in azurerm 5.0: AcceleratedConnections, Floating, MaxConnections, None (Preview)
+        # auxiliary_sku                  = "A8"  # New in azurerm 5.0: A8, A4, A1, A2, None (Preview)
       }
     }
 
@@ -143,6 +146,19 @@ linux_VMs = {
     #     # on_demand_bursting_enabled        = null
     #     # zone                              = null
     #     # public_network_access_enabled     = false
+    #     # disk_encryption_set_id            = null  # Conflicts with secure_vm_disk_encryption_set_id
+    #     # network_access_policy             = null  # AllowAll, AllowPrivate, DenyAll
+    #     # disk_access_id                    = null  # Only valid when network_access_policy = AllowPrivate
+    #     # encryption_settings = {
+    #     #   disk_encryption_key = {
+    #     #     secret_url      = ""
+    #     #     source_vault_id = ""
+    #     #   }
+    #     #   key_encryption_key = {
+    #     #     key_url         = ""
+    #     #     source_vault_id = ""
+    #     #   }
+    #     # }
     #   }
     # }
 
@@ -236,6 +252,8 @@ linux_VMs = {
     #     destination_port_ranges      = [""]
     #     destination_address_prefixes = [""]
     #     description                  = ""
+    #     # source_application_security_group_ids      = []  # New in azurerm 5.0
+    #     # destination_application_security_group_ids = []  # New in azurerm 5.0
     #   }
     # }
   }

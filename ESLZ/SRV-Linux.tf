@@ -9,7 +9,7 @@ variable "linux_VMs" {
 }
 
 module "linux_VMs" {
-  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v1.1.2"
+  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-linux_virtual_machineV2.git?ref=v2.0.0"
   for_each = var.linux_VMs
 
   location          = var.location
