@@ -174,18 +174,21 @@ resource "azurerm_network_interface" "vm-nic" {
   ip_forwarding_enabled          = try(each.value.ip_forwarding_enabled, false)
   accelerated_networking_enabled = try(each.value.accelerated_networking_enabled, false)
   internal_dns_name_label        = try(each.value.internal_dns_name_label, null)
+  auxiliary_mode                 = try(each.value.auxiliary_mode, null)
+  auxiliary_sku                  = try(each.value.auxiliary_sku, null)
 
   tags = merge(var.tags, try(each.value.tags, {}))
 
   # The first NIC in the list will always be the primary
   ip_configuration {
-    name                          = try(trimspace(each.value.ip_configuration_name) != "" ? trimspace(each.value.ip_configuration_name) : "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}", "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}")
-    private_ip_address_allocation = try(each.value.private_ip_address_allocation, "Dynamic")
-    private_ip_address            = try(each.value.private_ip_address_allocation, "Dynamic") == "Dynamic" ? null : each.value.private_ip_address
-    subnet_id                     = strcontains(each.value.subnet, "/resourceGroups/") ? each.value.subnet : var.subnets[each.value.subnet].id
-    private_ip_address_version    = try(each.value.private_ip_address_version, "IPv4")
-    public_ip_address_id          = try(each.value.public_ip_address_id, null)
-    primary                       = true
+    name                                               = try(trimspace(each.value.ip_configuration_name) != "" ? trimspace(each.value.ip_configuration_name) : "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}", "${local.vm-name}-ipconfig${local.nic_indices[each.key] + 1}")
+    private_ip_address_allocation                      = try(each.value.private_ip_address_allocation, "Dynamic")
+    private_ip_address                                 = try(each.value.private_ip_address_allocation, "Dynamic") == "Dynamic" ? null : each.value.private_ip_address
+    subnet_id                                          = strcontains(each.value.subnet, "/resourceGroups/") ? each.value.subnet : var.subnets[each.value.subnet].id
+    private_ip_address_version                         = try(each.value.private_ip_address_version, "IPv4")
+    public_ip_address_id                               = try(each.value.public_ip_address_id, null)
+    gateway_load_balancer_frontend_ip_configuration_id = try(each.value.gateway_load_balancer_frontend_ip_configuration_id, null)
+    primary                                            = true
 
   }
 }
@@ -225,7 +228,29 @@ resource "azurerm_managed_disk" "data_disks" {
   on_demand_bursting_enabled        = try(each.value.on_demand_bursting_enabled, null)
   zone                              = try(each.value.zone, null)
   public_network_access_enabled     = try(each.value.public_network_access_enabled, false)
+  disk_encryption_set_id            = try(each.value.disk_encryption_set_id, null)
+  network_access_policy             = try(each.value.network_access_policy, null)
+  disk_access_id                    = try(each.value.disk_access_id, null)
 
+  dynamic "encryption_settings" {
+    for_each = try(each.value.encryption_settings, null) != null ? [1] : []
+    content {
+      dynamic "disk_encryption_key" {
+        for_each = try(each.value.encryption_settings.disk_encryption_key, null) != null ? [1] : []
+        content {
+          secret_url      = each.value.encryption_settings.disk_encryption_key.secret_url
+          source_vault_id = each.value.encryption_settings.disk_encryption_key.source_vault_id
+        }
+      }
+      dynamic "key_encryption_key" {
+        for_each = try(each.value.encryption_settings.key_encryption_key, null) != null ? [1] : []
+        content {
+          key_url         = each.value.encryption_settings.key_encryption_key.key_url
+          source_vault_id = each.value.encryption_settings.key_encryption_key.source_vault_id
+        }
+      }
+    }
+  }
 
   tags = merge(var.tags, try(each.value.tags, {}))
 
@@ -258,28 +283,32 @@ resource "azurerm_network_security_group" "NSG" {
 
   dynamic "security_rule" {
     for_each = [for sr in var.linux_VM.security_rules : {
-      name                         = sr.name
-      priority                     = sr.priority
-      direction                    = sr.direction
-      access                       = sr.access
-      protocol                     = sr.protocol
-      source_port_ranges           = split(",", replace(sr.source_port_ranges[0], "*", "0-65535"))
-      destination_port_ranges      = split(",", replace(sr.destination_port_ranges[0], "*", "0-65535"))
-      source_address_prefixes      = sr.source_address_prefixes
-      destination_address_prefixes = sr.destination_address_prefixes
-      description                  = sr.description
+      name                                       = sr.name
+      priority                                   = sr.priority
+      direction                                  = sr.direction
+      access                                     = sr.access
+      protocol                                   = sr.protocol
+      source_port_ranges                         = split(",", replace(sr.source_port_ranges[0], "*", "0-65535"))
+      destination_port_ranges                    = split(",", replace(sr.destination_port_ranges[0], "*", "0-65535"))
+      source_address_prefixes                    = sr.source_address_prefixes
+      destination_address_prefixes               = sr.destination_address_prefixes
+      description                                = sr.description
+      source_application_security_group_ids      = try(sr.source_application_security_group_ids, null)
+      destination_application_security_group_ids = try(sr.destination_application_security_group_ids, null)
     }]
     content {
-      name                         = security_rule.value.name
-      priority                     = security_rule.value.priority
-      direction                    = security_rule.value.direction
-      access                       = security_rule.value.access
-      protocol                     = security_rule.value.protocol
-      source_port_ranges           = security_rule.value.source_port_ranges
-      destination_port_ranges      = security_rule.value.destination_port_ranges
-      source_address_prefixes      = security_rule.value.source_address_prefixes
-      destination_address_prefixes = security_rule.value.destination_address_prefixes
-      description                  = security_rule.value.description
+      name                                       = security_rule.value.name
+      priority                                   = security_rule.value.priority
+      direction                                  = security_rule.value.direction
+      access                                     = security_rule.value.access
+      protocol                                   = security_rule.value.protocol
+      source_port_ranges                         = security_rule.value.source_port_ranges
+      destination_port_ranges                    = security_rule.value.destination_port_ranges
+      source_address_prefixes                    = security_rule.value.source_address_prefixes
+      destination_address_prefixes               = security_rule.value.destination_address_prefixes
+      description                                = security_rule.value.description
+      source_application_security_group_ids      = security_rule.value.source_application_security_group_ids
+      destination_application_security_group_ids = security_rule.value.destination_application_security_group_ids
     }
   }
 

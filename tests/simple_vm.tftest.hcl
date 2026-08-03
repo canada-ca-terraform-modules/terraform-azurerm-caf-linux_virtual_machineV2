@@ -402,6 +402,203 @@ run "diff_disk_settings_argument" {
   }
 }
 
+run "nic_auxiliary_and_gateway_lb_argument" {
+  command = plan
+
+  variables {
+    linux_VM = {
+      jump_server                     = true
+      resource_group                  = "Project"
+      admin_username                  = "azureadmin"
+      disable_password_authentication = true
+      vm_size                         = "Standard_D2s_v5"
+      disable_backup                  = true
+
+      admin_ssh_key = {
+        username   = "azureadmin"
+        public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1G9o2R8v5rcVaGCXuWCoc4XEcVcKECOZbwcTrVgetTN1vByvVj5W/T1ivu8xZOK2SuoWWA7Vl7s8qufAS37rPnbC+7oRqvR6Log7bf8LGlHRtOhEmrhfT9uOYC1poq9JSczdYU4GU5jieJghuaDFX92wNtepO8n6bcd1EfvMSNTcrbmG8+OrKc7iBGl0cBcEGaszoaD3i4VRxGuCJsatQrJorQgD01AZbESWFP+Ijb3rzcCP7TDlJ6PddDz8SrWpyRO6nW5JEVNtaPgqJTUgnM31qcGJVfA/WGF4+WqvzHFSVzwnC/Xxp4VhlNaM75uRslNFesnQi/g5RzlDgGnm/ test@example"
+      }
+
+      nic = {
+        nic1 = {
+          subnet                                             = "OZ"
+          auxiliary_mode                                     = "AcceleratedConnections"
+          auxiliary_sku                                      = "A8"
+          gateway_load_balancer_frontend_ip_configuration_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/loadBalancers/lb1/frontendIPConfigurations/feip1"
+        }
+      }
+
+      storage_image_reference = {
+        publisher = "canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts-gen2"
+        version   = "latest"
+      }
+
+      os_disk = {
+        caching              = "ReadWrite"
+        storage_account_type = "StandardSSD_LRS"
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_network_interface.vm-nic["nic1"].auxiliary_mode == "AcceleratedConnections"
+    error_message = "auxiliary_mode should be propagated"
+  }
+
+  assert {
+    condition     = azurerm_network_interface.vm-nic["nic1"].auxiliary_sku == "A8"
+    error_message = "auxiliary_sku should be propagated"
+  }
+
+  assert {
+    condition     = azurerm_network_interface.vm-nic["nic1"].ip_configuration[0].gateway_load_balancer_frontend_ip_configuration_id != null
+    error_message = "gateway_load_balancer_frontend_ip_configuration_id should be propagated"
+  }
+}
+
+run "data_disk_new_arguments" {
+  command = plan
+
+  variables {
+    linux_VM = {
+      jump_server                     = true
+      resource_group                  = "Project"
+      admin_username                  = "azureadmin"
+      disable_password_authentication = true
+      vm_size                         = "Standard_D2s_v5"
+      disable_backup                  = true
+
+      admin_ssh_key = {
+        username   = "azureadmin"
+        public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1G9o2R8v5rcVaGCXuWCoc4XEcVcKECOZbwcTrVgetTN1vByvVj5W/T1ivu8xZOK2SuoWWA7Vl7s8qufAS37rPnbC+7oRqvR6Log7bf8LGlHRtOhEmrhfT9uOYC1poq9JSczdYU4GU5jieJghuaDFX92wNtepO8n6bcd1EfvMSNTcrbmG8+OrKc7iBGl0cBcEGaszoaD3i4VRxGuCJsatQrJorQgD01AZbESWFP+Ijb3rzcCP7TDlJ6PddDz8SrWpyRO6nW5JEVNtaPgqJTUgnM31qcGJVfA/WGF4+WqvzHFSVzwnC/Xxp4VhlNaM75uRslNFesnQi/g5RzlDgGnm/ test@example"
+      }
+
+      nic = {
+        nic1 = {
+          subnet = "OZ"
+        }
+      }
+
+      storage_image_reference = {
+        publisher = "canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts-gen2"
+        version   = "latest"
+      }
+
+      os_disk = {
+        caching              = "ReadWrite"
+        storage_account_type = "StandardSSD_LRS"
+      }
+
+      data_disks = {
+        disk1 = {
+          lun                    = 0
+          disk_size_gb           = 128
+          disk_encryption_set_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-security/providers/Microsoft.Compute/diskEncryptionSets/des1"
+          network_access_policy  = "AllowPrivate"
+          disk_access_id         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-security/providers/Microsoft.Compute/diskAccesses/da1"
+
+          encryption_settings = {
+            disk_encryption_key = {
+              secret_url      = "https://example-kv.vault.azure.net/secrets/dek/abcd1234"
+              source_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-security/providers/Microsoft.KeyVault/vaults/example-kv"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_managed_disk.data_disks["disk1"].disk_encryption_set_id != null
+    error_message = "disk_encryption_set_id should be propagated"
+  }
+
+  assert {
+    condition     = azurerm_managed_disk.data_disks["disk1"].network_access_policy == "AllowPrivate"
+    error_message = "network_access_policy should be propagated"
+  }
+
+  assert {
+    condition     = azurerm_managed_disk.data_disks["disk1"].disk_access_id != null
+    error_message = "disk_access_id should be propagated"
+  }
+
+  assert {
+    condition     = azurerm_managed_disk.data_disks["disk1"].encryption_settings[0].disk_encryption_key[0].secret_url != null
+    error_message = "encryption_settings.disk_encryption_key.secret_url should be propagated"
+  }
+}
+
+run "nsg_security_rule_argument" {
+  command = plan
+
+  variables {
+    linux_VM = {
+      jump_server                     = true
+      resource_group                  = "Project"
+      admin_username                  = "azureadmin"
+      disable_password_authentication = true
+      vm_size                         = "Standard_D2s_v5"
+      disable_backup                  = true
+      use_nic_nsg                     = true
+
+      admin_ssh_key = {
+        username   = "azureadmin"
+        public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1G9o2R8v5rcVaGCXuWCoc4XEcVcKECOZbwcTrVgetTN1vByvVj5W/T1ivu8xZOK2SuoWWA7Vl7s8qufAS37rPnbC+7oRqvR6Log7bf8LGlHRtOhEmrhfT9uOYC1poq9JSczdYU4GU5jieJghuaDFX92wNtepO8n6bcd1EfvMSNTcrbmG8+OrKc7iBGl0cBcEGaszoaD3i4VRxGuCJsatQrJorQgD01AZbESWFP+Ijb3rzcCP7TDlJ6PddDz8SrWpyRO6nW5JEVNtaPgqJTUgnM31qcGJVfA/WGF4+WqvzHFSVzwnC/Xxp4VhlNaM75uRslNFesnQi/g5RzlDgGnm/ test@example"
+      }
+
+      nic = {
+        nic1 = {
+          subnet = "OZ"
+        }
+      }
+
+      storage_image_reference = {
+        publisher = "canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts-gen2"
+        version   = "latest"
+      }
+
+      os_disk = {
+        caching              = "ReadWrite"
+        storage_account_type = "StandardSSD_LRS"
+      }
+
+      security_rules = [
+        {
+          name                                       = "allow-https"
+          priority                                   = 100
+          direction                                  = "Inbound"
+          access                                     = "Allow"
+          protocol                                   = "Tcp"
+          source_port_ranges                         = ["*"]
+          destination_port_ranges                    = ["443"]
+          source_address_prefixes                    = ["*"]
+          destination_address_prefixes               = ["*"]
+          description                                = "Allow inbound HTTPS"
+          source_application_security_group_ids      = ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/applicationSecurityGroups/asg-src"]
+          destination_application_security_group_ids = ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/applicationSecurityGroups/asg-dst"]
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(tolist(azurerm_network_security_group.NSG[0].security_rule)[0].source_application_security_group_ids) == 1
+    error_message = "source_application_security_group_ids should be propagated"
+  }
+
+  assert {
+    condition     = length(tolist(azurerm_network_security_group.NSG[0].security_rule)[0].destination_application_security_group_ids) == 1
+    error_message = "destination_application_security_group_ids should be propagated"
+  }
+}
+
 run "resource_name_overrides" {
   command = plan
 
