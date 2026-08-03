@@ -1,6 +1,6 @@
 name: Release on merge
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
     branches: [main]
 
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
         with:
-          ref: main
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Extract version from ESLZ/SRV-Linux.tf
         id: version
@@ -49,6 +49,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
@@ -62,4 +63,4 @@ jobs:
           gh release create "$VERSION" \
             --title "$VERSION" \
             --notes-file /tmp/release-notes.md \
-            --target main
+            --target "$MERGE_COMMIT_SHA"
