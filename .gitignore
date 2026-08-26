@@ -14,6 +14,8 @@
 # Variable override files that often contain environment-specific or sensitive values
 *.tfvars.json
 !ESLZ/*.tfvars
+# keep live-test harness fixture tracked
+!test/live/config/*.tfvars
 override.tf
 override.tf.json
 *_override.tf
