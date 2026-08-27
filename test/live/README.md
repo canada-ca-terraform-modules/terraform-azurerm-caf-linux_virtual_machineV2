@@ -29,3 +29,5 @@ terraform destroy -var-file=config/linux_virtual_machineV2.tfvars
 
 See the repo root's `.github/workflows/live-test.yml` for how CI wires two
 checkouts (target branch baseline + PR branch) against the same state file.
+<!-- no-op: verification PR for the live-test.yml conversion -->
+
