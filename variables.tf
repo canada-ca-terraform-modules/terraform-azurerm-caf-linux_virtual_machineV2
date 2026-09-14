@@ -65,7 +65,7 @@ variable "custom_data" {
   default     = null
 
   validation {
-    condition     = var.custom_data == null || contains(["install-ca-certs", "cloud-init-default"], var.custom_data) || can(regex("^https?://", var.custom_data)) || can(base64decode(var.custom_data))
+    condition     = var.custom_data == null || try(contains(["install-ca-certs", "cloud-init-default"], var.custom_data), false) || can(regex("^https?://", var.custom_data)) || can(base64decode(var.custom_data))
     error_message = "custom_data must be null, one of the keywords \"install-ca-certs\" or \"cloud-init-default\", a http(s):// URL, or a base64-encoded string."
   }
 }
