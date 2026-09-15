@@ -25,7 +25,7 @@ linux_VMs = {
     patch_assessment_mode = "AutomaticByPlatform" # force settings to AutomaticByPlatform for UMC OS patching
     patch_mode            = "AutomaticByPlatform" # force settings to AutomaticByPlatform for UMC OS patching
 
-    custom_data = "install-ca-certs"
+    custom_data = "cloud-init-default" # Can also be a relative path to a local file, a URL, or the "install-ca-certs" keyword
     # vm_name                                                = ""  # Optional: Override the auto-generated VM name (default: {env4}{serverType3}-{userDefinedString7})
     # nsg_name                                               = ""  # Optional: Override the auto-generated NSG name (default: <vm-name>-nsg; only relevant when use_nic_nsg = true)
     # kv_secret_name                                         = ""  # Optional: Override the Key Vault secret name used to store the generated admin password (default: <vm-name>-vm-admin-password)
